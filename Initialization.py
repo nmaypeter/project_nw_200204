@@ -1,4 +1,5 @@
-from generateDistribution import *
+from scipy import stats
+import numpy as np
 
 
 def safe_div(x, y):
