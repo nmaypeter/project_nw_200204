@@ -89,7 +89,7 @@ class SeedSelectionMIOA:
         # -- s_node are influenced by super root --
         s_total_set = set(s for k in range(self.num_product) for s in s_set[k])
         for k in range(self.num_product):
-            node_rank_dict = {s_node: 1.0 for s_node in s_set[k]}
+            node_rank_dict = {s_node: 1.0 for s_node in s_total_set}
             for i in (set(mioa_dict[k]) & s_set[k]):
                 for j in mioa_dict[k][i]:
                     i_prod, i_MIP = mioa_dict[k][i][j]
@@ -127,6 +127,7 @@ class SeedSelectionMIOA:
                             if i_prod <= node_rank_dict[j]:
                                 continue
                         node_rank_dict[j] = i_prod
+
             for i_path in i_path_set:
                 (i_node, ii_node) = i_path
                 if node_rank_dict[i_node] > node_rank_dict[ii_node]:
@@ -193,6 +194,116 @@ class SeedSelectionMIOA:
                     heap.heappush_max(celf_heap, celf_item)
 
         return celf_heap
+
+### SPBP
+
+
+class SeedSelectionSPBP:
+    def __init__(self, graph_dict, seed_cost_dict, product_list, epw_list, dag_class, r_flag):
+        ### graph_dict: (dict) the graph
+        ### seed_cost_dict[i]: (float4) the seed of i-node and k-item
+        ### product_list: (list) the set to record products [k's profit, k's cost, k's price]
+        ### num_product: (int) the kinds of products
+        ### product_weight_list: (list) the product weight list
+        self.graph_dict = graph_dict
+        self.seed_cost_dict = seed_cost_dict
+        self.product_list = product_list
+        self.num_product = len(product_list)
+        self.epw_list = epw_list
+        self.dag_class = dag_class
+        self.r_flag = r_flag
+        self.prob_threshold = 0.001
+
+    def generateMIOA(self):
+        ### mioa_dict[source_node][i_node]: (prob., MIP)
+        mioa_dict = {}
+
+        for source_node in self.graph_dict:
+            ### source_dict: the node in heap which may update its activated probability --
+            ### source_dict[i_node] = (prob, in-neighbor)
+            mioa_dict[source_node] = {}
+            source_dict = {i: (self.graph_dict[source_node][i], source_node) for i in self.graph_dict[source_node]}
+            source_dict[source_node] = (1.0, source_node)
+            source_heap = [(self.graph_dict[source_node][i], i) for i in self.graph_dict[source_node]]
+            heap.heapify_max(source_heap)
+
+            # -- it will not find a better path than the existing MIP --
+            # -- because if this path exists, it should be pop earlier from the heap. --
+            while source_heap:
+                (i_prob, i_node) = heap.heappop_max(source_heap)
+                i_prev = source_dict[i_node][1]
+
+                # -- find MIP from source_node to i_node --
+                i_path = [i_node, i_prev]
+                while i_prev != source_node:
+                    i_prev = source_dict[i_prev][1]
+                    i_path.append(i_prev)
+                i_path.pop()
+                i_path.reverse()
+
+                mioa_dict[source_node][i_node] = (i_prob, i_path)
+
+                if i_node in self.graph_dict:
+                    for ii_node in self.graph_dict[i_node]:
+                        # -- not yet find MIP from source_node to ii_node --
+                        if ii_node not in mioa_dict[source_node]:
+                            ii_prob = round(i_prob * self.graph_dict[i_node][ii_node], 4)
+
+                            if ii_prob >= self.prob_threshold:
+                                # -- if ii_node is in heap --
+                                if ii_node in source_dict:
+                                    ii_prob_d = source_dict[ii_node][0]
+                                    if ii_prob > ii_prob_d:
+                                        source_dict[ii_node] = (ii_prob, i_node)
+                                        source_heap.remove((ii_prob_d, ii_node))
+                                        source_heap.append((ii_prob, ii_node))
+                                        heap.heapify_max(source_heap)
+                                # -- if ii_node is not in heap --
+                                else:
+                                    source_dict[ii_node] = (ii_prob, i_node)
+                                    heap.heappush_max(source_heap, (ii_prob, ii_node))
+
+        mioa_dict = [mioa_dict] * self.num_product
+        # -- update node's activated probability by product weight --
+        mioa_dict = [{i: {j: (round(mioa_dict[k][i][j][0] * self.epw_list[k] ** len(mioa_dict[k][i][j][1]), 4), mioa_dict[k][i][j][1])
+                          for j in mioa_dict[k][i]} for i in mioa_dict[k]} for k in range(self.num_product)]
+        # -- remove influenced nodes which are over diffusion threshold --
+        mioa_dict = [{i: {j: mioa_dict[k][i][j] for j in mioa_dict[k][i] if mioa_dict[k][i][j][0] >= self.prob_threshold} for i in mioa_dict[k]}
+                     for k in range(self.num_product)]
+        # -- remove empty mioa --
+        mioa_dict = [{i: mioa_dict[k][i] for i in mioa_dict[k] if mioa_dict[k][i]} for k in range(self.num_product)]
+
+        mioa_set_dict = [{i: set(mioa_dict[k][i]) for i in mioa_dict[k]} for k in range(self.num_product)]
+        ps_dict = [{i: [(kk, ii) for kk in range(self.num_product) for ii in mioa_dict[k] if mioa_set_dict[k][i] & mioa_set_dict[kk][ii]]
+                    for i in mioa_dict[k]} for k in range(self.num_product)]
+
+        return mioa_dict, ps_dict
+
+    def generateCelfDict(self, mioa_dict):
+        max_s = (0.0, 0, 0)
+        celf_dict = {}
+        ss = SeedSelectionMIOA(self.graph_dict, self.seed_cost_dict, self.product_list, self.epw_list, self.dag_class, self.r_flag)
+        for k in range(self.num_product):
+            for i in self.graph_dict:
+                s_set = [set() for _ in range(self.num_product)]
+                s_set[k].add(i)
+                dag_dict = [{} for _ in range(self.num_product)]
+                if self.dag_class == 1:
+                    dag_dict = ss.generateDAG1(mioa_dict, s_set)
+                elif self.dag_class == 2:
+                    dag_dict = ss.generateDAG2(mioa_dict, s_set)
+                ep = ss.calculateExpectedProfit(dag_dict, s_set)
+
+                if ep > max_s[0]:
+                    max_s = (ep, k, i)
+
+                if ep > 0:
+                    if self.r_flag:
+                        ep = safe_div(ep, self.seed_cost_dict[i])
+                    celf_dict[(k, i)] = ep
+        max_s = (max_s[1], max_s[2])
+
+        return celf_dict, max_s
 
 ### NG
 
