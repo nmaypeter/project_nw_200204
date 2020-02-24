@@ -19,6 +19,11 @@ if __name__ == '__main__':
                 Model('mdag2', dataset_name, product_name, cascade_model).model_dag(2, r_flag=False)
                 Model('mdag2r', dataset_name, product_name, cascade_model).model_dag(2, r_flag=True)
 
+                Model('mspbp1', dataset_name, product_name, cascade_model).model_spbp(1, r_flag=False)
+                Model('mspbp1r', dataset_name, product_name, cascade_model).model_spbp(1, r_flag=True)
+                Model('mspbp2', dataset_name, product_name, cascade_model).model_spbp(2, r_flag=False)
+                Model('mspbp2r', dataset_name, product_name, cascade_model).model_spbp(2, r_flag=True)
+
                 for wd in wd_seq:
                     wallet_distribution_type = 'm50e25' * (wd == 1) + 'm66e34' * (wd == 2) + 'm99e96' * (wd == 3)
 
@@ -26,6 +31,11 @@ if __name__ == '__main__':
                     Model('mdag1repw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_dag(1, r_flag=True)
                     Model('mdag2epw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_dag(2, r_flag=False)
                     Model('mdag2repw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_dag(2, r_flag=True)
+
+                    Model('mspbpepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(1, r_flag=False)
+                    Model('mspbprepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(1, r_flag=True)
+                    Model('mspbpepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(2, r_flag=False)
+                    Model('mspbprepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(2, r_flag=True)
 
                 for times in range(10):
                     Model('mng_' + str(times), dataset_name, product_name, cascade_model).model_ng(r_flag=False)
