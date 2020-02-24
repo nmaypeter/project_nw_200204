@@ -6,6 +6,8 @@ prod_seq = [1, 2]
 wd_seq = [1, 2, 3]
 model_seq = ['mdag1epw', 'mdag1repw', 'mdag1', 'mdag1r',
              'mdag2epw', 'mdag2repw', 'mdag2', 'mdag2r',
+             'mspbp1epw', 'mspbp1repw', 'mspbp1', 'mspbp1r',
+             'mspbp2epw', 'mspbp2repw', 'mspbp2', 'mspbp2r',
              'mngepw', 'mngrepw', 'mng', 'mngr',
              'mhd', 'mr', 'mpmisepw', 'mpmis', 'mbcsepw', 'mbcs']
 
