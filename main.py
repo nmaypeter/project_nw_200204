@@ -32,10 +32,10 @@ if __name__ == '__main__':
                     Model('mdag2epw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_dag(2, r_flag=False)
                     Model('mdag2repw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_dag(2, r_flag=True)
 
-                    Model('mspbpepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(1, r_flag=False)
-                    Model('mspbprepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(1, r_flag=True)
-                    Model('mspbpepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(2, r_flag=False)
-                    Model('mspbprepw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(2, r_flag=True)
+                    Model('mspbp1epw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(1, r_flag=False)
+                    Model('mspbp1repw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(1, r_flag=True)
+                    Model('mspbp2epw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(2, r_flag=False)
+                    Model('mspbp2repw', dataset_name, product_name, cascade_model, wallet_distribution_type).model_spbp(2, r_flag=True)
 
                 for times in range(10):
                     Model('mng_' + str(times), dataset_name, product_name, cascade_model).model_ng(r_flag=False)
