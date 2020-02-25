@@ -386,7 +386,7 @@ class Model:
                 mep_deg, mep_k_prod, mep_i_node = mep_item
                 sc = seed_cost_dict[mep_i_node]
                 if round(now_budget + sc, 4) >= total_budget and bud_iteration and not temp_sequence:
-                    celf_heap_c = copy.deepcopy(celf_heap)
+                    degree_heap_c = copy.deepcopy(degree_heap)
 
                 if round(now_budget + sc, 4) >= total_budget and bud_iteration and not temp_sequence:
                     ss_time = round(time.time() - ss_start_time + ss_acc_time, 4)
