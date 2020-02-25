@@ -70,7 +70,7 @@ class EvaluationM:
         self.product_name = product_name
         self.new_product_name = 'lphc' * (product_name == 'item_lphc') + 'hplc' * (product_name == 'item_hplc')
         self.cascade_model = cascade_model
-        self.times = 10 if 'dag' in model_name else 1
+        self.times = 10 if 'dag' in model_name or 'spbp' in model_name else 1
 
     def evaluate(self, bi, wallet_distribution_type, sample_seed_set, ss_time):
         eva_start_time = time.time()
